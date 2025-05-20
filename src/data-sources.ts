@@ -1,4 +1,3 @@
-// filepath: src/data-sources.ts
 import { DataSource } from "typeorm";
 import { Book } from "./entity/Book";
 
