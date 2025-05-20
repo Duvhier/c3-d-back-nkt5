@@ -1,13 +1,13 @@
-
+// filepath: src/data-sources.ts
 import { DataSource } from "typeorm";
 import { Book } from "./entity/Book";
 
 export const AppDataSource = new DataSource({
-    type: "sqlite",
-    database: "database.sqlite",
-    synchronize: true,
-    logging: false,
-    entities: [Book],
-    migrations: [],
-    subscribers: [],
+  type: "postgres",
+  url: process.env.DATABASE_URL, // pon la URL de conexión aquí o usa variables de entorno
+  synchronize: true,
+  logging: false,
+  entities: [Book],
+  migrations: [],
+  subscribers: [],
 });
