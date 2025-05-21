@@ -16,4 +16,10 @@ export class Book {
 
     @Column()
     genre: string;
+
+    @Column({ type: 'text', nullable: true })
+    description: string;
+
+    @Column({ type: 'text', nullable: true })
+    coverUrl: string;
 }

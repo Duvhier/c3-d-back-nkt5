@@ -6,8 +6,18 @@ import cors from "cors";
 import bookRoutes from "./routes/bookRoutes";
 
 const app = express();
-app.use(express.json());
-app.use(cors());
+
+// Configure CORS
+app.use(cors({
+  origin: 'http://localhost:5173', // Frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Increase payload size limit
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 app.use("/api/books", bookRoutes);
 
 AppDataSource.initialize().then(() => {

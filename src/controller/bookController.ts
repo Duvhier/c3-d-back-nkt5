@@ -32,7 +32,7 @@ export const getBookById = async (req: Request, res: Response) => {
 // Crear un nuevo libro
 export const createBook = async (req: Request, res: Response) => {
   try {
-    const { title, author, publishedDate, genre } = req.body;
+    const { title, author, publishedDate, genre, description, coverUrl } = req.body;
 
     console.log('Request body:', req.body); // Verifica los datos recibidos
 
@@ -40,7 +40,14 @@ export const createBook = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Todos los campos son requeridos" });
     }
 
-    const newBook = bookRepository.create({ title, author, publishedDate, genre });
+    const newBook = bookRepository.create({ 
+      title, 
+      author, 
+      publishedDate, 
+      genre,
+      description: description || '',
+      coverUrl: coverUrl || ''
+    });
     await bookRepository.save(newBook);
 
     console.log('Book saved:', newBook); // Verifica el libro guardado
@@ -56,17 +63,25 @@ export const createBook = async (req: Request, res: Response) => {
 export const updateBook = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, author, publishedDate, genre } = req.body;
+    const { title, author, publishedDate, genre, description, coverUrl } = req.body;
 
     const book = await bookRepository.findOneBy({ id: parseInt(id) });
     if (!book) {
       return res.status(404).json({ message: "Libro no encontrado" });
     }
 
-    bookRepository.merge(book, { title, author, publishedDate, genre });
+    bookRepository.merge(book, { 
+      title, 
+      author, 
+      publishedDate, 
+      genre,
+      description: description || book.description,
+      coverUrl: coverUrl || book.coverUrl
+    });
     const updatedBook = await bookRepository.save(book);
     res.json(updatedBook);
   } catch (error) {
+    console.error('Error updating book:', error);
     res.status(500).json({ message: "Error al actualizar el libro", error });
   }
 };
