@@ -4,7 +4,7 @@ import { Book } from "../entity/Book";
 
 const bookRepository = AppDataSource.getRepository(Book);
 
-// Obtener todos los libros
+// Obtener todos los libros vercel
 export const getBooks = async (req: Request, res: Response) => {
   try {
     const books = await bookRepository.find();

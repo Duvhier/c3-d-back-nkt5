@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
-
+// This entity represents a book in the database
 @Entity()
 export class Book {
     @PrimaryGeneratedColumn()
