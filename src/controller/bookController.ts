@@ -86,7 +86,7 @@ export const updateBook = async (req: Request, res: Response) => {
 
     res.json(updatedBook);
   } catch (error) {
-    console.error('Error updating book:', error);
+    console.error("Error updating book:", error);
     res.status(500).json({ message: "Error al actualizar el libro", error });
   }
 };
