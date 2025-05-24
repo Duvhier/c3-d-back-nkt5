@@ -6,7 +6,7 @@ import { connectDB, getDB } from "../mongo";
 
 const bookRepository = AppDataSource.getMongoRepository(Book);
 
-// Obtener todos los libros
+// Obtener todos los libros vercel
 export const getBooks = async (req: Request, res: Response) => {
   try {
     await connectDB();
