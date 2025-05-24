@@ -1,12 +1,13 @@
 import { DataSource } from "typeorm";
 import { Book } from "./entity/Book";
+import 'dotenv/config';
 
 export const AppDataSource = new DataSource({
-  type: "postgres",
-  url: process.env.DATABASE_URL, // pon la URL de conexión aquí o usa variables de entorno
+  type: "mongodb",
+  url: process.env.MONGODB_URI,
   synchronize: true,
-  logging: false,
+  logging: true,
   entities: [Book],
   migrations: [],
-  subscribers: [],
+  subscribers: []
 });

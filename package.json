@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "migrate": "ts-node src/migrate.ts",
+    "check-migration": "ts-node src/check-migration.ts",
+    "test-book": "ts-node src/test-book.ts",
+    "verify-connection": "ts-node src/verify-connection.ts",
+    "add-book": "ts-node src/add-book.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,9 +21,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "pg": "^8.16.0",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.2.0",
     "reflect-metadata": "^0.2.2",
-    "sqlite3": "^5.1.7",
     "typeorm": "^0.3.24"
   },
   "devDependencies": {

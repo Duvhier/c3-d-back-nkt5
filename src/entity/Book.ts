@@ -1,9 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, ObjectIdColumn, ObjectId, Column } from "typeorm";
 
-@Entity()
+@Entity("books")
 export class Book {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @ObjectIdColumn()
+    _id: ObjectId;
 
     @Column()
     title: string;
@@ -16,9 +16,6 @@ export class Book {
 
     @Column()
     genre: string;
-
-    @Column({ type: 'text', nullable: true })
-    description: string;
 
     @Column({ type: 'text', nullable: true })
     coverUrl: string;
