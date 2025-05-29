@@ -105,3 +105,152 @@ export const deleteBook = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error al eliminar el libro", error });
   }
 };
+
+// Obtener todos los autores
+export const getAuthors = async (req: Request, res: Response) => {
+  try {
+    await connectDB();
+    const db = getDB();
+    const authors = await db.collection('authors').find().toArray();
+    res.json(authors);
+  } catch (error) {
+    console.error('Error al obtener autores:', error);
+    res.status(500).json({ message: 'Error al obtener autores', error });
+  }
+};
+
+// Crear un nuevo autor
+export const createAuthor = async (req: Request, res: Response) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: 'El nombre del autor es requerido' });
+    }
+
+    await connectDB();
+    const db = getDB();
+
+    // Verificar si ya existe
+    const existing = await db.collection('authors').findOne({ name });
+    if (existing) {
+      return res.status(409).json({ message: 'El autor ya existe' });
+    }
+
+    const result = await db.collection('authors').insertOne({ name });
+    res.status(201).json({ _id: result.insertedId, name });
+  } catch (error) {
+    console.error('Error al crear autor:', error);
+    res.status(500).json({ message: 'Error al crear autor', error });
+  }
+};
+
+// Eliminar un autor
+export const deleteAuthor = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await connectDB();
+    const db = getDB();
+    const result = await db.collection('authors').deleteOne({ _id: new ObjectId(id) });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Autor no encontrado' });
+    }
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error al eliminar autor:', error);
+    res.status(500).json({ message: 'Error al eliminar autor', error });
+  }
+};
+
+// Buscar autor por nombre (usado por el frontend)
+export const findAuthorByName = async (req: Request, res: Response) => {
+  try {
+    const { name } = req.query;
+
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ message: 'El nombre es requerido' });
+    }
+
+    await connectDB();
+    const db = getDB();
+
+    const author = await db.collection('authors').findOne({ name });
+
+    if (author) {
+      return res.json({ found: true, author });
+    } else {
+      return res.json({ found: false });
+    }
+  } catch (error) {
+    console.error('Error al buscar autor:', error);
+    res.status(500).json({ message: 'Error al buscar autor', error });
+  }
+};
+
+// Obtener todos los géneros
+export const getGenres = async (req: Request, res: Response) => {
+  try {
+    await connectDB();
+    const db = getDB();
+    const genres = await db.collection('genres').find().toArray();
+    res.json(genres);
+  } catch (error) {
+    console.error('Error al obtener géneros:', error);
+    res.status(500).json({ message: 'Error al obtener géneros', error });
+  }
+};
+
+// Buscar género por nombre (usado por el frontend)
+export const findGenreByName = async (req: Request, res: Response) => {
+  try {
+    const { name } = req.query;
+
+    if (!name || typeof name !== 'string') {  
+      return res.status(400).json({ message: 'El nombre es requerido' });
+    }
+
+    await connectDB();
+    const db = getDB();
+
+    const genre = await db.collection('genres').findOne({ name });
+
+    if (genre) {
+      return res.json({ found: true, genre });
+    } else {
+      return res.json({ found: false });
+    }
+  } catch (error) { 
+    console.error('Error al buscar género:', error);
+    res.status(500).json({ message: 'Error al buscar género', error });
+  }
+};
+
+
+// Crear un nuevo género
+export const createGenre = async (req: Request, res: Response) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: 'El nombre del género es requerido' });
+    }
+
+    await connectDB();
+    const db = getDB();
+
+    // Verificar si ya existe
+    const existing = await db.collection('genres').findOne({ name });
+    if (existing) {
+      return res.status(409).json({ message: 'El género ya existe' });
+    }
+
+    const result = await db.collection('genres').insertOne({ name });
+    res.status(201).json({ _id: result.insertedId, name });
+  } catch (error) {
+    console.error('Error al crear género:', error);
+    res.status(500).json({ message: 'Error al crear género', error });
+  }
+};
+
+
+

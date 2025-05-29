@@ -4,6 +4,8 @@ import "reflect-metadata";
 import { AppDataSource } from "./data-sources";
 import cors from "cors";
 import bookRoutes from "./routes/bookRoutes";
+import authorRoutes from "./routes/authorRoutes";   
+import genreRoutes from "./routes/genreRoutes";
 
 const app = express();
 
@@ -21,6 +23,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Rutas API
 app.use("/api/books", bookRoutes);
+app.use("/api/authors", authorRoutes);
+app.use("/api/genres", genreRoutes);
+
 
 // Inicializar base de datos y lanzar servidor si no está en Vercel
 AppDataSource.initialize().then(() => {
