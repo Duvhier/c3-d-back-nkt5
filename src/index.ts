@@ -9,20 +9,11 @@ import genreRoutes from "./routes/genreRoutes";
 
 const app = express();
 
-const allowedOrigins = ['https://c3-d-front-nkt5.vercel.app', 'http://localhost:5173'];
 
 // ✅ Configurar CORS correctamente para permitir credenciales desde el frontend
 app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, origin);
-        } else {
-            callback(new Error('CORS not allowed from ' + origin));
-        }
-    },
+    origin: ['https://c3-d-front-nkt5.vercel.app', 'http://localhost:5173'],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Middleware para manejar payloads grandes (opcional)
