@@ -32,13 +32,9 @@ app.get("/", (req, res) => {
 
 // Inicializar base de datos y lanzar servidor si no está en Vercel
 AppDataSource.initialize().then(() => {
-    if (process.env.VERCEL === "1") {
-        // En Vercel, no se levanta un servidor tradicional
-    } else {
-        app.listen(3000, '0.0.0.0', () => {
-            console.log("🚀 Server running on http://localhost:3000");
-        });
-    }
+    app.listen(process.env.PORT || 3000, () => {
+        console.log("🚀 Server running on port", process.env.PORT || 3000);
+    });
 });
 
 export default app;
