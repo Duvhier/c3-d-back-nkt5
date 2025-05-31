@@ -11,7 +11,7 @@ const app = express();
 
 // ✅ Configurar CORS correctamente para permitir credenciales desde el frontend
 app.use(cors({
-origin: 'http://localhost:5173',
+origin: 'https://c3-d-front-nkt5.vercel.app',
 credentials: true,
 methods: ['GET', 'POST', 'PUT', 'DELETE'],
 allowedHeaders: ['Content-Type', 'Authorization']
