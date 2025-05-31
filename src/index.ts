@@ -9,9 +9,17 @@ import genreRoutes from "./routes/genreRoutes";
 
 const app = express();
 
+const allowedOrigins = ['https://c3-d-front-nkt5.vercel.app', 'http://localhost:5173'];
+
 // ✅ Configurar CORS correctamente para permitir credenciales desde el frontend
 app.use(cors({
-    origin: 'https://c3-d-front-nkt5.vercel.app',
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, origin);
+        } else {
+            callback(new Error('CORS not allowed from ' + origin));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -22,12 +30,12 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Rutas API
-app.use("/api/books", bookRoutes);
-app.use("/api/authors", authorRoutes);
-app.use("/api/genres", genreRoutes);
+app.use('/api/books', bookRoutes);
+app.use('/api/authors', authorRoutes);
+app.use('/api/genres', genreRoutes);
 
-app.get("/", (req, res) => {
-    res.send("🚀 Backend está corriendo!");
+app.get('/', (req, res) => {
+    res.send('🚀 Backend está corriendo!');
 });
 
 // Inicializar base de datos y lanzar servidor si no está en Vercel
