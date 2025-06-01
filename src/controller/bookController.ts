@@ -111,45 +111,11 @@ export const getAuthors = async (req: Request, res: Response) => {
   try {
     await connectDB();
     const db = getDB();
-    
-    // Agregar timeout a la operación
-    const authorsPromise = db.collection('authors').find().toArray();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout al obtener autores')), 10000)
-    );
-    
-    const authors = await Promise.race([authorsPromise, timeoutPromise]) as any[];
-    
-    // Verificar si hay autores
-    if (!authors || authors.length === 0) {
-      return res.json([]);
-    }
-    
+    const authors = await db.collection('authors').find().toArray();
     res.json(authors);
   } catch (error) {
     console.error('Error al obtener autores:', error);
-    
-    // Manejar diferentes tipos de errores
-    if (error instanceof Error) {
-      if (error.message.includes('Timeout')) {
-        return res.status(504).json({ 
-          message: 'La operación tomó demasiado tiempo. Por favor, intente nuevamente.',
-          error: 'timeout'
-        });
-      }
-      
-      if (error.message.includes('MongoDB')) {
-        return res.status(503).json({ 
-          message: 'Error de conexión con la base de datos. Por favor, intente nuevamente.',
-          error: 'database_error'
-        });
-      }
-    }
-    
-    res.status(500).json({ 
-      message: 'Error al obtener autores',
-      error: process.env.NODE_ENV === 'development' ? error : 'internal_error'
-    });
+    res.status(500).json({ message: 'Error al obtener autores', error });
   }
 };
 
