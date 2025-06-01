@@ -124,19 +124,8 @@ export const getAuthors = async (req: Request, res: Response) => {
     if (!authors || authors.length === 0) {
       return res.json([]);
     }
-
-    // Obtener la cantidad de libros por autor
-    const authorsWithBookCount = await Promise.all(
-      authors.map(async (author) => {
-        const bookCount = await db.collection('books').countDocuments({ author: author.name });
-        return {
-          ...author,
-          bookCount
-        };
-      })
-    );
     
-    res.json(authorsWithBookCount);
+    res.json(authors);
   } catch (error) {
     console.error('Error al obtener autores:', error);
     
@@ -294,43 +283,6 @@ export const createGenre = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error al crear género:', error);
     res.status(500).json({ message: 'Error al crear género', error });
-  }
-};
-
-// Obtener libros por autor
-export const getBooksByAuthor = async (req: Request, res: Response) => {
-  try {
-    const { authorName } = req.params;
-
-    if (!authorName) {
-      return res.status(400).json({ message: 'El nombre del autor es requerido' });
-    }
-
-    await connectDB();
-    const db = getDB();
-
-    // Verificar si el autor existe
-    const author = await db.collection('authors').findOne({ name: authorName });
-    if (!author) {
-      return res.status(404).json({ message: 'Autor no encontrado' });
-    }
-
-    // Obtener los libros del autor
-    const books = await db.collection('books')
-      .find({ author: authorName })
-      .toArray();
-
-    res.json({
-      author,
-      books,
-      totalBooks: books.length
-    });
-  } catch (error) {
-    console.error('Error al obtener libros del autor:', error);
-    res.status(500).json({ 
-      message: 'Error al obtener libros del autor',
-      error: process.env.NODE_ENV === 'development' ? error : 'internal_error'
-    });
   }
 };
 
