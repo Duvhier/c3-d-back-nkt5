@@ -111,11 +111,36 @@ export const getAuthors = async (req: Request, res: Response) => {
   try {
     await connectDB();
     const db = getDB();
-    const authors = await db.collection('authors').find().toArray();
-    res.json(authors);
-  } catch (error) {
+    
+    // Agregar manejo de paginación
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [authors, total] = await Promise.all([
+      db.collection('authors')
+        .find()
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      db.collection('authors').countDocuments()
+    ]);
+
+    res.json({
+      data: authors,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error: any) {
     console.error('Error al obtener autores:', error);
-    res.status(500).json({ message: 'Error al obtener autores', error });
+    res.status(500).json({ 
+      message: 'Error al obtener autores', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 };
 
@@ -132,16 +157,37 @@ export const createAuthor = async (req: Request, res: Response) => {
     const db = getDB();
 
     // Verificar si ya existe
-    const existing = await db.collection('authors').findOne({ name });
+    const existing = await db.collection('authors').findOne({ 
+      name: { $regex: new RegExp(`^${name}$`, 'i') } 
+    });
+    
     if (existing) {
-      return res.status(409).json({ message: 'El autor ya existe' });
+      return res.status(409).json({ 
+        message: 'El autor ya existe',
+        existingAuthor: existing
+      });
     }
 
-    const result = await db.collection('authors').insertOne({ name, nationality, coverUrl });
-    res.status(201).json({ _id: result.insertedId, name, nationality, coverUrl  });
-  } catch (error) {
+    const newAuthor = {
+      name,
+      nationality: nationality || '',
+      coverUrl: coverUrl || '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const result = await db.collection('authors').insertOne(newAuthor);
+    
+    res.status(201).json({ 
+      _id: result.insertedId,
+      ...newAuthor
+    });
+  } catch (error: any) {
     console.error('Error al crear autor:', error);
-    res.status(500).json({ message: 'Error al crear autor', error });
+    res.status(500).json({ 
+      message: 'Error al crear autor', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 };
 

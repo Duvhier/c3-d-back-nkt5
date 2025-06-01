@@ -6,6 +6,7 @@ import cors from "cors";
 import bookRoutes from "./routes/bookRoutes";
 import authorRoutes from "./routes/authorRoutes";
 import genreRoutes from "./routes/genreRoutes";
+import { connectDB } from "./mongo";
 
 const app = express();
 
@@ -28,20 +29,26 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 
 // Middleware para manejar payloads grandes
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Middleware para manejar errores
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Error interno del servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Algo salió mal'
-  });
+// Middleware para verificar la conexión a la base de datos
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Error de conexión a la base de datos:', error);
+    res.status(503).json({
+      error: 'Error de conexión a la base de datos',
+      message: 'El servicio no está disponible temporalmente'
+    });
+  }
 });
 
 // Rutas API
@@ -51,6 +58,15 @@ app.use('/api/genres', genreRoutes);
 
 app.get('/', (req, res) => {
   res.send('🚀 Backend está corriendo!');
+});
+
+// Middleware para manejar errores
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: 'Error interno del servidor',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Algo salió mal'
+  });
 });
 
 // Inicializar base de datos y lanzar servidor
