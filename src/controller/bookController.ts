@@ -111,11 +111,56 @@ export const getAuthors = async (req: Request, res: Response) => {
   try {
     await connectDB();
     const db = getDB();
-    const authors = await db.collection('authors').find().toArray();
-    res.json(authors);
+    
+    // Agregar timeout a la operación
+    const authorsPromise = db.collection('authors').find().toArray();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout al obtener autores')), 10000)
+    );
+    
+    const authors = await Promise.race([authorsPromise, timeoutPromise]) as any[];
+    
+    // Verificar si hay autores
+    if (!authors || authors.length === 0) {
+      return res.json([]);
+    }
+
+    // Obtener la cantidad de libros por autor
+    const authorsWithBookCount = await Promise.all(
+      authors.map(async (author) => {
+        const bookCount = await db.collection('books').countDocuments({ author: author.name });
+        return {
+          ...author,
+          bookCount
+        };
+      })
+    );
+    
+    res.json(authorsWithBookCount);
   } catch (error) {
     console.error('Error al obtener autores:', error);
-    res.status(500).json({ message: 'Error al obtener autores', error });
+    
+    // Manejar diferentes tipos de errores
+    if (error instanceof Error) {
+      if (error.message.includes('Timeout')) {
+        return res.status(504).json({ 
+          message: 'La operación tomó demasiado tiempo. Por favor, intente nuevamente.',
+          error: 'timeout'
+        });
+      }
+      
+      if (error.message.includes('MongoDB')) {
+        return res.status(503).json({ 
+          message: 'Error de conexión con la base de datos. Por favor, intente nuevamente.',
+          error: 'database_error'
+        });
+      }
+    }
+    
+    res.status(500).json({ 
+      message: 'Error al obtener autores',
+      error: process.env.NODE_ENV === 'development' ? error : 'internal_error'
+    });
   }
 };
 
@@ -249,6 +294,43 @@ export const createGenre = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error al crear género:', error);
     res.status(500).json({ message: 'Error al crear género', error });
+  }
+};
+
+// Obtener libros por autor
+export const getBooksByAuthor = async (req: Request, res: Response) => {
+  try {
+    const { authorName } = req.params;
+
+    if (!authorName) {
+      return res.status(400).json({ message: 'El nombre del autor es requerido' });
+    }
+
+    await connectDB();
+    const db = getDB();
+
+    // Verificar si el autor existe
+    const author = await db.collection('authors').findOne({ name: authorName });
+    if (!author) {
+      return res.status(404).json({ message: 'Autor no encontrado' });
+    }
+
+    // Obtener los libros del autor
+    const books = await db.collection('books')
+      .find({ author: authorName })
+      .toArray();
+
+    res.json({
+      author,
+      books,
+      totalBooks: books.length
+    });
+  } catch (error) {
+    console.error('Error al obtener libros del autor:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener libros del autor',
+      error: process.env.NODE_ENV === 'development' ? error : 'internal_error'
+    });
   }
 };
 

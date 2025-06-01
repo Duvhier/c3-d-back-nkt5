@@ -6,21 +6,52 @@ if (!uri) {
   throw new Error('Falta la variable de entorno MONGODB_URI');
 }
 
-const client = new MongoClient(uri);
+const client = new MongoClient(uri, {
+  connectTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 10000,
+  maxPoolSize: 50,
+  minPoolSize: 10,
+  maxIdleTimeMS: 60000,
+  retryWrites: true,
+  retryReads: true
+});
+
 let db: Db | null = null;
+let isConnecting = false;
+let connectionPromise: Promise<void> | null = null;
 
 /**
- * Conecta a la base de datos MongoDB.
+ * Conecta a la base de datos MongoDB con manejo de reconexión.
  */
 export async function connectDB(): Promise<void> {
-  try {
-    await client.connect();
-    db = client.db('library_db'); // Cambia 'library' si tu base tiene otro nombre
-    console.log('MongoDB conectado');
-  } catch (error) {
-    console.error('Error conectando a MongoDB:', error);
-    throw error;
+  if (db) {
+    return;
   }
+
+  if (isConnecting) {
+    if (connectionPromise) {
+      return connectionPromise;
+    }
+  }
+
+  isConnecting = true;
+  connectionPromise = (async () => {
+    try {
+      await client.connect();
+      db = client.db('library_db');
+      console.log('MongoDB conectado');
+    } catch (error) {
+      console.error('Error conectando a MongoDB:', error);
+      db = null;
+      throw error;
+    } finally {
+      isConnecting = false;
+      connectionPromise = null;
+    }
+  })();
+
+  return connectionPromise;
 }
 
 /**
@@ -38,6 +69,23 @@ export function getDB(): Db {
  * Cierra la conexión con MongoDB.
  */
 export async function closeDB(): Promise<void> {
-  await client.close();
-  console.log('MongoDB desconectado');
+  try {
+    await client.close();
+    db = null;
+    console.log('MongoDB desconectado');
+  } catch (error) {
+    console.error('Error al cerrar la conexión con MongoDB:', error);
+    throw error;
+  }
 }
+
+// Manejar desconexiones inesperadas
+client.on('close', () => {
+  console.log('Conexión a MongoDB cerrada inesperadamente');
+  db = null;
+});
+
+client.on('error', (error) => {
+  console.error('Error en la conexión de MongoDB:', error);
+  db = null;
+});
