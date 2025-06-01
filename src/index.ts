@@ -12,7 +12,7 @@ const app = express();
 
 // ✅ Configurar CORS correctamente para permitir credenciales desde el frontend
 app.use(cors({
-    origin: ['https://c3-d-front-nkt5.vercel.app', 'http://localhost:5173'],
+    origin: '*',
     credentials: true,
 }));
 
