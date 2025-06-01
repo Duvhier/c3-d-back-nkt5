@@ -122,7 +122,7 @@ export const getAuthors = async (req: Request, res: Response) => {
 // Crear un nuevo autor
 export const createAuthor = async (req: Request, res: Response) => {
   try {
-    const { name } = req.body;
+    const { name, nationality, coverUrl } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: 'El nombre del autor es requerido' });
@@ -137,8 +137,8 @@ export const createAuthor = async (req: Request, res: Response) => {
       return res.status(409).json({ message: 'El autor ya existe' });
     }
 
-    const result = await db.collection('authors').insertOne({ name });
-    res.status(201).json({ _id: result.insertedId, name });
+    const result = await db.collection('authors').insertOne({ name, nationality, coverUrl });
+    res.status(201).json({ _id: result.insertedId, name, nationality, coverUrl  });
   } catch (error) {
     console.error('Error al crear autor:', error);
     res.status(500).json({ message: 'Error al crear autor', error });
