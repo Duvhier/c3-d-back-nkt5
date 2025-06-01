@@ -9,11 +9,19 @@ import genreRoutes from "./routes/genreRoutes";
 
 const app = express();
 
+// ✅ Leer orígenes permitidos desde variable de entorno
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
-// ✅ Configurar CORS correctamente para permitir credenciales desde el frontend
 app.use(cors({
-    origin: '*',
-    credentials: true,
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (como Postman o SSR) o si el origen está permitido
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS: ' + origin));
+    }
+  },
+  credentials: true
 }));
 
 // Middleware para manejar payloads grandes (opcional)
@@ -26,14 +34,15 @@ app.use('/api/authors', authorRoutes);
 app.use('/api/genres', genreRoutes);
 
 app.get('/', (req, res) => {
-    res.send('🚀 Backend está corriendo!');
+  res.send('🚀 Backend está corriendo!');
 });
 
-// Inicializar base de datos y lanzar servidor si no está en Vercel
+// Inicializar base de datos y lanzar servidor
 AppDataSource.initialize().then(() => {
-    app.listen(process.env.PORT || 3000, () => {
-        console.log("🚀 Server running on port", process.env.PORT || 3000);
-    });
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+  });
 });
 
 export default app;
