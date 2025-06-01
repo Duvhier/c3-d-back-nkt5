@@ -13,19 +13,7 @@ const app = express();
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // En producción, verificar orígenes permitidos
-    if (process.env.NODE_ENV === 'production') {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('No permitido por CORS: ' + origin));
-      }
-    } else {
-      // En desarrollo, permitir todos los orígenes
-      callback(null, true);
-    }
-  },
+  origin: '*', // Permitir todos los orígenes en desarrollo
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -35,13 +23,10 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Middleware para manejar errores
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Error interno del servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Algo salió mal'
-  });
+// Middleware para logging de requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
 });
 
 // Rutas API
@@ -53,21 +38,48 @@ app.get('/', (req, res) => {
   res.send('🚀 Backend está corriendo!');
 });
 
-// Inicializar base de datos y lanzar servidor
-AppDataSource.initialize()
-  .then(() => {
+// Middleware para manejar errores
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    error: 'Error interno del servidor',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Algo salió mal'
+  });
+});
+
+// Función para iniciar el servidor
+const startServer = async () => {
+  try {
+    // Inicializar la conexión a la base de datos
+    await AppDataSource.initialize();
+    console.log('✅ Base de datos conectada');
+
     const port = parseInt(process.env.PORT || '3000', 10);
     const server = app.listen(port, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${port}`);
+      console.log(`📝 API Documentation: http://localhost:${port}`);
     });
 
     // Configurar timeouts
     server.timeout = 120000; // 2 minutos
     server.keepAliveTimeout = 120000;
-  })
-  .catch((error) => {
+
+    // Manejar errores del servidor
+    server.on('error', (error: any) => {
+      console.error('Error del servidor:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`El puerto ${port} está en uso. Intenta con otro puerto.`);
+        process.exit(1);
+      }
+    });
+
+  } catch (error) {
     console.error('Error durante la inicialización:', error);
     process.exit(1);
-  });
+  }
+};
+
+// Iniciar el servidor
+startServer();
 
 export default app;
