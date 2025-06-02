@@ -171,9 +171,7 @@ export const createAuthor = async (req: Request, res: Response) => {
     const newAuthor = {
       name,
       nationality: nationality || '',
-      coverUrl: coverUrl || '',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      coverUrl: coverUrl || ''
     };
 
     const result = await db.collection('authors').insertOne(newAuthor);
