@@ -107,34 +107,26 @@ export const deleteBook = async (req: Request, res: Response) => {
 };
 
 // Obtener todos los autores
+// Obtener todos los autores con soporte para 'limit'
 export const getAuthors = async (req: Request, res: Response) => {
   try {
     await connectDB();
     const db = getDB();
-    
-    // Agregar manejo de paginación
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const skip = (page - 1) * limit;
 
-    const [authors, total] = await Promise.all([
-      db.collection('authors')
-        .find()
-        .skip(skip)
-        .limit(limit)
-        .toArray(),
-      db.collection('authors').countDocuments()
-    ]);
+    const limitParam = req.query.limit;
+    const limit = limitParam ? parseInt(limitParam as string, 23) : 0;
 
-    res.json({
-      data: authors,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    if (limitParam && (isNaN(limit) || limit <= 0)) {
+      return res.status(400).json({ message: "El parámetro 'limit' debe ser un número entero positivo" });
+    }
+
+    const authors = await db
+      .collection('authors')
+      .find()
+      .limit(limit)
+      .toArray();
+
+    res.json(authors);
   } catch (error: any) {
     console.error('Error al obtener autores:', error);
     res.status(500).json({ 
