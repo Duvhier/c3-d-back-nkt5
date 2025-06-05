@@ -119,9 +119,21 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/authors",
+							"raw": "{{baseUrl}}/api/authors?page=1&limit=10",
 							"host": ["{{baseUrl}}"],
-							"path": ["api", "authors"]
+							"path": ["api", "authors"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Items per page"
+								}
+							]
 						}
 					}
 				},
