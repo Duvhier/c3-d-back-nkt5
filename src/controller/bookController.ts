@@ -6,6 +6,43 @@ import { connectDB, getDB } from "../mongo";
 
 const bookRepository = AppDataSource.getMongoRepository(Book);
 
+// Obtener libros por autor
+export const getBooksByAuthor = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    await connectDB();
+    const db = getDB();
+
+    // Primero obtener el autor
+    const author = await db.collection('authors').findOne({ _id: new ObjectId(id) });
+    
+    if (!author) {
+      return res.status(404).json({ message: 'Autor no encontrado' });
+    }
+
+    // Luego obtener los libros del autor
+    const books = await db.collection('books').find({ author: author.name }).toArray();
+
+    res.json({
+      author: {
+        _id: author._id,
+        name: author.name,
+        nationality: author.nationality,
+        coverUrl: author.coverUrl
+      },
+      books: books,
+      totalBooks: books.length
+    });
+  } catch (error: any) {
+    console.error('Error al obtener libros del autor:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener libros del autor', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
+  }
+};
+
 // Obtener todos los libros vercel
 export const getBooks = async (req: Request, res: Response) => {
   try {
@@ -111,8 +148,22 @@ export const getAuthors = async (req: Request, res: Response) => {
   try {
     await connectDB();
     const db = getDB();
+    
+    // Obtener todos los autores
     const authors = await db.collection('authors').find().toArray();
-    res.json(authors);
+    
+    // Obtener el conteo de libros para cada autor
+    const authorsWithBookCount = await Promise.all(
+      authors.map(async (author) => {
+        const bookCount = await db.collection('books').countDocuments({ author: author.name });
+        return {
+          ...author,
+          bookCount
+        };
+      })
+    );
+
+    res.json(authorsWithBookCount);
   } catch (error: any) {
     console.error('Error al obtener autores:', error);
     res.status(500).json({ 
@@ -246,7 +297,6 @@ export const findGenreByName = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error al buscar género', error });
   }
 };
-
 
 // Crear un nuevo género
 export const createGenre = async (req: Request, res: Response) => {
